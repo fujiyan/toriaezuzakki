@@ -1,0 +1,12 @@
+<p>
+    <a href="@{UserEditorR}">新規ユーザ登録
+<p>登録済ユーザ一覧
+<ul>
+$forall Entity userId user <- users
+    <li>
+        <a href="@?{(UserEditorR, [("userId", toPathPiece userId)])}">編集
+        #{userIdent user}
+        <input type="button" value="削除" onclick="if (confirm('削除しますか?')) {userListForm.userId.value = #{toPathPiece userId};userListForm.submit();}">
+
+<form name="userListForm" action=@{UserListR} method="POST" enctype="#{enctype}">
+    ^{widget}

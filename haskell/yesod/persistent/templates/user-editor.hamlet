@@ -1,0 +1,4 @@
+<a href="@{UserListR}">ユーザ一覧へ
+<form action=@{UserEditorR} method="POST" enctype="#{enctype}">
+    ^{widget}
+    <input type="submit" value="送信">

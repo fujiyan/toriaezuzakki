@@ -109,12 +109,14 @@ display :: Descriptor -- a 'Descriptor'
     -> Double -- an angle of the triangles in radians
     -> IO ()
 display (Descriptor triangles firstIndex numVertices program) angle = do
-    clear [ ColorBuffer ]
-    bindVertexArrayObject $= Just triangles
-
     worldLocation <- get $ uniformLocation program "world"
     UL.uniformMatrix4fv worldLocation $= [worldMatrix $ realToFrac angle]
 
+    clear [ ColorBuffer ]
+
+    bindVertexArrayObject $= Just triangles
     drawArrays Triangles firstIndex numVertices
+
     flush
+
     checkError "display"

@@ -100,8 +100,9 @@ display :: Descriptor -- a 'Descriptor'
     -> IO ()
 display (Descriptor triangles firstIndex numVertices program) = do
     clear [ ColorBuffer ]
-    bindVertexArrayObject $= Just triangles
 
+    bindVertexArrayObject $= Just triangles
     drawArrays Triangles firstIndex numVertices
+
     flush
     checkError "display"

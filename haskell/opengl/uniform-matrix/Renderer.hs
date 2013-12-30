@@ -94,6 +94,7 @@ init = do
     vertexAttribArray vColor $= Enabled
 
     checkError "init"
+
     return $ Descriptor triangles 0 (fromIntegral numVertices) program
 
 

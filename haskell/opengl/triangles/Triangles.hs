@@ -3,7 +3,6 @@ module Main ( main ) where
 
 
 import Control.Concurrent
-import Control.Exception
 import Control.Monad
 import qualified Graphics.UI.GLFW as GLFW
 import System.IO
@@ -20,24 +19,19 @@ errorHandler error description = do
 -- | The rendering loop.
 renderingLoop
     :: GLFW.Window -- ^ a window handle
-    -> (Double -> IO ()) -- ^ a rendering action
+    -> IO () -- ^ a rendering action
     -> IO ()
 renderingLoop window display = do
-    GLFW.setTime 0
     loop
 
   where
     loop = (GLFW.windowShouldClose window) >>= (flip unless) go
 
-    getTime = GLFW.getTime >>= maybe (throwIO $ userError "getTime") (\t -> return t)
-
     go = do
-        t <- getTime
-        let angle = (2 * pi / 2) * t -- makes one rotation every two seconds
-        display angle
+        display
         GLFW.swapBuffers window
         GLFW.pollEvents
-        threadDelay 16000 -- suspends to reduce cpu usage
+        threadDelay 100000 -- suspends to reduce cpu usage
         loop
 
 

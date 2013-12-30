@@ -10,12 +10,10 @@ import Foreign.Marshal.Array
 import Foreign.Ptr
 import Foreign.Storable
 import Graphics.Rendering.OpenGL
-import Linear
 import Prelude hiding ( init )
 import System.IO
 
 import qualified LoadShaders as LS
-import qualified UniformLinear as UL
 
 
 -- | Checks OpenGL errors, and Write to stderr when the errors occur.
@@ -97,23 +95,12 @@ init = do
     return $ Descriptor triangles 0 (fromIntegral numVertices) program
 
 
--- | A world matrix for the triangles.
-worldMatrix :: GLfloat -- an angle of the triangles in radians
-    -> M44 GLfloat -- a world matrix
-worldMatrix angle =
-    V4 (V4 1 0 0 0) (V4 0 (cos angle) (sin angle) 0) (V4 0 (-sin angle) (cos angle) 0) (V4 0 0 0 1)
-
-
 -- | Displays meshes with a 'Descriptor'.
 display :: Descriptor -- a 'Descriptor'
-    -> Double -- an angle of the triangles in radians
     -> IO ()
-display (Descriptor triangles firstIndex numVertices program) angle = do
+display (Descriptor triangles firstIndex numVertices program) = do
     clear [ ColorBuffer ]
     bindVertexArrayObject $= Just triangles
-
-    worldLocation <- get $ uniformLocation program "world"
-    UL.uniformMatrix4fv worldLocation $= [worldMatrix $ realToFrac angle]
 
     drawArrays Triangles firstIndex numVertices
     flush

@@ -102,7 +102,7 @@ init = do
 worldMatrix :: GLfloat -- an angle of the triangles in radians
     -> M44 GLfloat -- a world matrix
 worldMatrix angle =
-    V4 (V4 1 0 0 0) (V4 0 (cos angle) (sin angle) 0) (V4 0 (-sin angle) (cos angle) 0) (V4 0 0 0 1)
+    V4 (V4 1 0 0 0) (V4 0 (cos angle) (-sin angle) 0) (V4 0 (sin angle) (cos angle) 0) (V4 0 0 0 1)
 
 
 -- | Displays meshes with a 'Descriptor'.

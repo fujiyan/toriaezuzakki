@@ -5,6 +5,7 @@ module Main ( main ) where
 import Control.Concurrent
 import Control.Monad
 import qualified Graphics.UI.GLFW as GLFW
+import System.Environment
 import System.IO
 
 import qualified Renderer as R
@@ -53,6 +54,8 @@ afterCreateWindow window = do
 -- | The entry point of the application.
 main :: IO ()
 main = do
+    progName <- getProgName
+
     GLFW.setErrorCallback $ Just errorHandler
 
     GLFW.init
@@ -61,6 +64,6 @@ main = do
     GLFW.windowHint $ GLFW.WindowHint'ContextVersionMinor 3
     GLFW.windowHint $ GLFW.WindowHint'OpenGLProfile GLFW.OpenGLProfile'Core
 
-    GLFW.createWindow 500 500 "Triangles" Nothing Nothing >>= maybe (return ()) afterCreateWindow
+    GLFW.createWindow 500 500 progName Nothing Nothing >>= maybe (return ()) afterCreateWindow
 
     GLFW.terminate

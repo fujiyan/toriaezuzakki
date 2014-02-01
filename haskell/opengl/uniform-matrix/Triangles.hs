@@ -34,11 +34,11 @@ renderingLoop window display = do
 
     go = do
         t <- getTime
-        let angle = (2 * pi / 2) * t -- makes one rotation every two seconds
+        let angle = (2 * pi / 2) * t -- Makes one rotation every two seconds.
         display angle
         GLFW.swapBuffers window
         GLFW.pollEvents
-        threadDelay 16000 -- suspends to reduce cpu usage
+        threadDelay 16000 -- Suspends to reduce the CPU usage.
         loop
 
 

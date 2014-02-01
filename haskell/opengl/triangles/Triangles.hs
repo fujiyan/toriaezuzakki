@@ -32,7 +32,7 @@ renderingLoop window display = do
         display
         GLFW.swapBuffers window
         GLFW.pollEvents
-        threadDelay 100000 -- suspends to reduce cpu usage
+        threadDelay 100000 -- Suspends to reduce the CPU usage.
         loop
 
 

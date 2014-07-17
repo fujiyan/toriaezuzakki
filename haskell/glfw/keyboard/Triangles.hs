@@ -103,7 +103,7 @@ main = do
 
     GLFW.init
 
-    GLFW.windowHint $ GLFW.WindowHint'ContextVersionMajor 4
+    GLFW.windowHint $ GLFW.WindowHint'ContextVersionMajor 3
     GLFW.windowHint $ GLFW.WindowHint'ContextVersionMinor 3
     GLFW.windowHint $ GLFW.WindowHint'OpenGLProfile GLFW.OpenGLProfile'Core
 

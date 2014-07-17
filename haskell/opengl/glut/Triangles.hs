@@ -7,7 +7,7 @@ main = do
     (progName, _args) <- getArgsAndInitialize
     initialDisplayMode $= [ RGBAMode ]
     initialWindowSize $= Size 512 512
-    initialContextVersion $= (4, 3)
+    initialContextVersion $= (3, 3)
 
     -- TODO: Just for debugging, remove me later.
     initialContextFlags $= [ DebugContext ]

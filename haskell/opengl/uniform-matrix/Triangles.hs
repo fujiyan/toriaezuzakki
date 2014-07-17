@@ -20,10 +20,10 @@ errorHandler error description = do
 
 -- | The rendering loop.
 renderingLoop
-    :: GLFW.Window -- ^ a window handle
-    -> (Double -> IO ()) -- ^ a rendering action
+    :: GLFW.Window -- ^ the window handle
+    -> (Double -> IO ()) -- ^ rendering action
     -> IO ()
-renderingLoop window display = do
+renderingLoop window render = do
     GLFW.setTime 0
     loop
 
@@ -35,7 +35,7 @@ renderingLoop window display = do
     go = do
         t <- getTime
         let angle = (2 * pi / 2) * t -- Makes one rotation every two seconds.
-        display angle
+        render angle
         GLFW.swapBuffers window
         GLFW.pollEvents
         threadDelay 16000 -- Suspends to reduce the CPU usage.
@@ -44,7 +44,7 @@ renderingLoop window display = do
 
 -- | The process after the createWindow.
 afterCreateWindow
-    :: GLFW.Window -- ^ a window handle
+    :: GLFW.Window -- ^ the window handle
     -> IO ()
 afterCreateWindow window = do
     GLFW.makeContextCurrent $ Just window
@@ -52,7 +52,7 @@ afterCreateWindow window = do
 
     desc <- R.init
 
-    renderingLoop window (R.display desc)
+    renderingLoop window (R.render desc)
 
     GLFW.destroyWindow window
 
@@ -66,7 +66,7 @@ main = do
 
     GLFW.init
 
-    GLFW.windowHint $ GLFW.WindowHint'ContextVersionMajor 4
+    GLFW.windowHint $ GLFW.WindowHint'ContextVersionMajor 3
     GLFW.windowHint $ GLFW.WindowHint'ContextVersionMinor 3
     GLFW.windowHint $ GLFW.WindowHint'OpenGLProfile GLFW.OpenGLProfile'Core
 

@@ -1,8 +1,8 @@
--- | Provides functions and types for rendering.
+-- | Provides functionality of rendering the triangles.
 module Renderer
     ( Descriptor
     , init
-    , display
+    , render
     ) where
 
 
@@ -16,9 +16,9 @@ import System.IO
 import qualified LoadShaders as LS
 
 
--- | Checks OpenGL errors, and Write to stderr when the errors occur.
+-- | Checks OpenGL errors, and Writes to stderr when errors occur.
 checkError
-    :: String -- ^ the function name that called this
+    :: String -- ^ a function name that called this
     -> IO ()
 checkError functionName = get errors >>= mapM_ reportError
   where
@@ -26,14 +26,14 @@ checkError functionName = get errors >>= mapM_ reportError
         hPutStrLn stderr $ (show category) ++ " in " ++ functionName ++ ": " ++ message
 
 
--- | Converts a offset value to a Ptr value
+-- | Converts an offset value to the Ptr value.
 bufferOffset :: Integral a
-    => a -- ^ a offset value
+    => a -- ^ an offset value
     -> Ptr b -- ^ the Ptr value
 bufferOffset = plusPtr nullPtr . fromIntegral
 
 
--- | A set of OpenGL objects which is set for the application and other rendering information.
+-- | Represents a set of OpenGL objects for rendering information.
 data Descriptor = Descriptor
     VertexArrayObject
     ArrayIndex
@@ -41,7 +41,7 @@ data Descriptor = Descriptor
     Program
 
 
--- | Initializes a 'Descriptor'.
+-- | Initializes a descriptor.
 init :: IO Descriptor
 init = do
     triangles <- genObjectName
@@ -96,10 +96,10 @@ init = do
     return $ Descriptor triangles 0 (fromIntegral numVertices) program
 
 
--- | Displays meshes with a 'Descriptor'.
-display :: Descriptor -- a 'Descriptor'
+-- | Renders the triangles with a descriptor.
+render :: Descriptor -- ^ a descriptor
     -> IO ()
-display (Descriptor triangles firstIndex numVertices program) = do
+render (Descriptor triangles firstIndex numVertices program) = do
     clear [ ColorBuffer ]
 
     bindVertexArrayObject $= Just triangles

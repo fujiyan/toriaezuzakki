@@ -14,21 +14,21 @@ module FixedFrameRateManager
 import Control.Monad.State
 
 
--- | Calculates the next tick and the passed frames from the drawn tick.
-calcNextTick
+-- | Calculates the next step and the passed frames from the drawn step.
+calcNextStep
     :: Int -- ^ the value of fps
-    -> Double -- ^ the drawn tick
+    -> Double -- ^ the drawn step
     -> Double -- ^ current time
-    -> (Double, Int) -- ^ the next tick and the passed frames
-calcNextTick fps drawnTick currentTime =
-    loop drawnTick 0
+    -> (Double, Int) -- ^ the next step and the passed frames
+calcNextStep fps drawnStep currentTime =
+    loop drawnStep 0
   where
     spf = 1.0 / (realToFrac fps)
 
-    loop tick frames =
-        if tick > currentTime
-            then (tick, frames)
-            else loop (tick + spf) (frames + 1)
+    loop step frames =
+        if step > currentTime
+            then (step, frames)
+            else loop (step + spf) (frames + 1)
 
 
 -- | Specifies processes for the delayed frames.
@@ -48,9 +48,9 @@ data FrameAction =
 data FrameInfo = FrameInfo
     { fps :: Int
     , dfp :: DelayedFrameProcessing
-    , drawnTick :: Double
+    , drawnStep :: Double
     , updatedFrames :: Int
-    , nextTick :: Double
+    , nextStep :: Double
     }
 
 
@@ -71,14 +71,14 @@ checkNextAction :: Monad m
     => Double -- ^ current time
     -> FrameRateManager m FrameAction -- ^ next action
 checkNextAction currentTime = do
-    FrameInfo fps dfp drawnTick updatedFrames _ <- get
+    FrameInfo fps dfp drawnStep updatedFrames _ <- get
 
-    -- Calculates the next tick and the passed frames from the drawn tick.
-    let (nextTick, frames) = calcNextTick fps drawnTick currentTime
+    -- Calculates the next step and the passed frames from the drawn step.
+    let (nextStep, frames) = calcNextStep fps drawnStep currentTime
 
     case (frames <= 0) of
 
-        -- If the passed frame is zero, nothing is done because current time is before the drawn tick.
+        -- If the passed frame is zero, nothing is done because current time is before the drawn step.
         True  -> return None
 
         -- If the passed frames are more than 1, does updating or drawing.
@@ -92,8 +92,8 @@ checkNextAction currentTime = do
 
                         -- If the updated frames equal the passed frames, does drawing because updating has caught up.
                         False -> do
-                            -- Updates nextTick to set after drawing.
-                            put $ FrameInfo fps dfp drawnTick updatedFrames nextTick
+                            -- Updates nextStep to set after drawing.
+                            put $ FrameInfo fps dfp drawnStep updatedFrames nextStep
                             return Drawing
                 Slowdown -> do
                     case (updatedFrames == 0) of
@@ -103,8 +103,8 @@ checkNextAction currentTime = do
 
                         -- If the frame has been updated, does drawing.
                         False -> do
-                            -- Updates nextTick to set after drawing.
-                            put $ FrameInfo fps dfp drawnTick updatedFrames nextTick
+                            -- Updates nextStep to set after drawing.
+                            put $ FrameInfo fps dfp drawnStep updatedFrames nextStep
                             return Drawing
 
 
@@ -114,10 +114,10 @@ doUpdating :: Monad m
     -> FrameRateManager m a -- ^ the result of updating action
 doUpdating action = do
     ret <- lift action
-    FrameInfo fps dfp drawnTick updatedFrames nextTick <- get
+    FrameInfo fps dfp drawnStep updatedFrames nextStep <- get
 
     -- Increments a count of the updated frames.
-    put $ FrameInfo fps dfp drawnTick (updatedFrames + 1) nextTick
+    put $ FrameInfo fps dfp drawnStep (updatedFrames + 1) nextStep
 
     return ret
 
@@ -128,10 +128,10 @@ doDrawing :: Monad m
     -> FrameRateManager m a -- ^ the result of drawing action
 doDrawing action = do
     ret <- lift action
-    FrameInfo fps dfp _ _ nextTick <- get
+    FrameInfo fps dfp _ _ nextStep <- get
 
-    -- Resets a count of the updated frames and sets nextTick to drawnTick.
-    put $ FrameInfo fps dfp nextTick 0 nextTick
+    -- Resets a count of the updated frames and sets nextStep to drawnStep.
+    put $ FrameInfo fps dfp nextStep 0 nextStep
 
     return ret
 

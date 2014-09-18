@@ -12,7 +12,7 @@ import System.Environment
 import System.IO
 
 import qualified ApplicationModel as AM
-import qualified FixedFrameRateManager as FRM
+import qualified FixedStepManager as FSM
 import qualified Renderer as R
 
 
@@ -55,7 +55,7 @@ renderingLoop
     -> IO ()
 renderingLoop window render = do
     GLFW.setTime 0
-    FRM.runFrameRateManager 60 FRM.Drop (loop (AM.TriangleData 0 0))
+    FSM.runStepManager (1/60) (loop (AM.TriangleData 0 0))
 
   where
     loop td = ((lift . GLFW.windowShouldClose) window) >>= (flip unless) (go td)
@@ -64,16 +64,16 @@ renderingLoop window render = do
 
     go td = do
         t <- lift getTime
-        fp <- FRM.checkNextAction t
+        fp <- FSM.checkNextAction t
         case fp of
-            FRM.None     -> do
+            FSM.None     -> do
                 (lift . threadDelay) 10 -- Suspends to reduce the CPU usage.
                 loop td
-            FRM.Updating -> do
-                td' <- FRM.doUpdating (update window td)
+            FSM.Update -> do
+                td' <- FSM.doUpdate (update window td)
                 loop td'
-            FRM.Drawing  -> do
-                FRM.doDrawing (render td)
+            FSM.Drawing  -> do
+                FSM.doDrawing (render td)
                 (lift . GLFW.swapBuffers) window
                 lift GLFW.pollEvents
                 loop td

@@ -6,5 +6,5 @@ out vec4 fColor;
 
 void main()
 {
-   fColor = col;
+    fColor = col;
 }

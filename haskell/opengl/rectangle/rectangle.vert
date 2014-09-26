@@ -7,6 +7,6 @@ out vec4 col;
 
 void main()
 {
-   col = vColor;
-   gl_Position = vPosition;
+    col = vColor;
+    gl_Position = vPosition;
 }

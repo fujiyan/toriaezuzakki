@@ -35,6 +35,7 @@ renderingLoop window render = do
     go = do
         t <- getTime
         let angle = (2 * pi / 2) * t -- Makes one rotation every two seconds.
+
         render angle
         GLFW.swapBuffers window
         GLFW.pollEvents
@@ -50,9 +51,11 @@ afterCreateWindow window = do
     GLFW.makeContextCurrent $ Just window
     GLFW.swapInterval 1
 
-    desc <- R.init
+    desc <- R.initialize
 
     renderingLoop window (R.render desc)
+
+    R.terminate desc
 
     GLFW.destroyWindow window
 

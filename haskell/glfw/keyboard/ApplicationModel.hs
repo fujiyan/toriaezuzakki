@@ -1,8 +1,8 @@
 -- | Provides the application model.
 module ApplicationModel
-    ( TriangleData(..)
+    ( RectangleData(..)
     ) where
 
 
--- | Represents data of the triangles.
-data TriangleData = TriangleData Int Int
+-- | Represents data of the rectangle.
+data RectangleData = RectangleData Int Int

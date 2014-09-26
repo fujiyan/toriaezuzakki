@@ -1,7 +1,8 @@
 -- | Provides functionality of rendering the application model.
 module Renderer
     ( Descriptor
-    , init
+    , initialize
+    , terminate
     , render
     ) where
 
@@ -11,7 +12,6 @@ import Foreign.Ptr
 import Foreign.Storable
 import Graphics.Rendering.OpenGL
 import Linear
-import Prelude hiding ( init )
 import System.IO
 
 import qualified ApplicationModel as AM
@@ -36,52 +36,69 @@ bufferOffset :: Integral a
 bufferOffset = plusPtr nullPtr . fromIntegral
 
 
+-- | The byte size of a memory area that is converted from a list.
+arrayByteSize :: (Storable a)
+    => [a] -- ^ a list
+    -> Int
+arrayByteSize ls = (sizeOf (head ls)) * (length ls)
+
+
 -- | Represents a set of OpenGL objects for rendering information.
 data Descriptor = Descriptor
+    BufferObject
     VertexArrayObject
+    BufferObject
+    Program
     ArrayIndex
     NumArrayIndices
-    Program
 
 
--- | Initializes a descriptor.
-init :: IO Descriptor
-init = do
-    triangles <- genObjectName
-    bindVertexArrayObject $= Just triangles
+-- | Initializes a buffer object.
+initializeBuffer :: (Storable a) => BufferTarget -> [a] -> IO BufferObject
+initializeBuffer t array = do
+    buffer <- genObjectName
+    bindBuffer t $= Just buffer
+
+    withArray array $ \ptr -> do
+        bufferData t $= (fromIntegral $ arrayByteSize array, ptr, StaticDraw)
+
+    bindBuffer ElementArrayBuffer $= Nothing
+    return buffer
+
+
+-- | Initializes OpenGL objects.
+initialize :: IO Descriptor
+initialize = do
 
     -- meshes
     let vertices =
             -- vertex attribute format : x, y, z, r, g, b, a
             [
-            -- a triangle 1
               (-0.90), (-0.90), 0.0, 1.0, 0.0, 0.0, 1.0
-            ,    0.85, (-0.90), 0.0, 0.0, 1.0, 0.0, 1.0
-            , (-0.90),    0.85, 0.0, 0.0, 0.0, 1.0, 1.0
-            -- a triangle 2
-            ,    0.90, (-0.85), 0.0, 0.0, 1.0, 1.0, 1.0
-            ,    0.90,    0.90, 0.0, 1.0, 0.0, 1.0, 1.0
-            , (-0.85),    0.90, 0.0, 1.0, 1.0, 0.0, 1.0
+            ,    0.90, (-0.90), 0.0, 0.0, 1.0, 0.0, 1.0
+            ,    0.90,    0.90, 0.0, 1.0, 1.0, 1.0, 1.0
+            , (-0.90),    0.90, 0.0, 0.0, 0.0, 1.0, 1.0
             ] :: [GLfloat]
         numPositionElements = 3
         numColorElements = 4
         offsetPosition = 0
         offsetColor = offsetPosition + numPositionElements
-        numVertices = (length vertices) `div` (numPositionElements + numColorElements)
         sizeElement = sizeOf (head vertices)
         sizeVertex = fromIntegral (sizeElement * (numPositionElements + numColorElements))
 
-    arrayBuffer <- genObjectName
-    bindBuffer ArrayBuffer $= Just arrayBuffer
-    withArray vertices $ \ptr -> do
-        let size = fromIntegral ((length vertices) * sizeElement)
-        bufferData ArrayBuffer $= (size, ptr, StaticDraw)
+    let indices =
+            [
+              0, 1, 2
+            , 2, 3, 0
+            ] :: [GLushort]
 
-    program <- LS.loadShaders
-        [ LS.ShaderInfo VertexShader (LS.FileSource "triangles.vert")
-        , LS.ShaderInfo FragmentShader (LS.FileSource "triangles.frag")
-        ]
-    currentProgram $= Just program
+
+    vertexBuffer <- initializeBuffer ArrayBuffer vertices
+
+
+    attributes <- genObjectName
+    bindVertexArrayObject $= Just attributes
+    bindBuffer ArrayBuffer $= Just vertexBuffer
 
     let vPosition = AttribLocation 0
         vColor = AttribLocation 1
@@ -94,15 +111,50 @@ init = do
     vertexAttribArray vPosition $= Enabled
     vertexAttribArray vColor $= Enabled
 
-    checkError "init"
+    bindBuffer ArrayBuffer $= Nothing
+    bindVertexArrayObject $= Nothing
 
-    return $ Descriptor triangles 0 (fromIntegral numVertices) program
+
+    indexBuffer <- initializeBuffer ElementArrayBuffer indices
 
 
--- | A world matrix for the triangles.
-worldMatrix :: AM.TriangleData -- data of the triangles
+    program <- LS.loadShaders
+        [ LS.ShaderInfo VertexShader (LS.FileSource "rectangle.vert")
+        , LS.ShaderInfo FragmentShader (LS.FileSource "rectangle.frag")
+        ]
+    currentProgram $= Just program
+
+
+    checkError "initialize"
+
+    return $ Descriptor vertexBuffer attributes indexBuffer program 0 (fromIntegral $ length indices)
+
+
+-- | Terminates OpenGL objects.
+terminate :: Descriptor -> IO ()
+terminate (Descriptor vertexBuffer attributes indexBuffer program _ _) = do
+    currentProgram $= Nothing
+
+    shaders <- get $ attachedShaders program
+    mapM_ releaseShader shaders
+    deleteObjectName program
+
+    deleteObjectName indexBuffer
+    deleteObjectName attributes
+    deleteObjectName vertexBuffer
+
+    checkError "terminate"
+
+  where
+    releaseShader shader = do
+        detachShader program shader
+        deleteObjectName shader
+
+
+-- | A world matrix for the rectangle.
+worldMatrix :: AM.RectangleData -- data of the rectangle
     -> M44 GLfloat -- ^ a world matrix
-worldMatrix (AM.TriangleData x y) =
+worldMatrix (AM.RectangleData x y) =
     V4  (V4 1 0 0 (fx / 50))
         (V4 0 1 0 (fy / 50))
         (V4 0 0 1 0)
@@ -114,17 +166,22 @@ worldMatrix (AM.TriangleData x y) =
 
 -- | Renders the application model with a descriptor.
 render :: Descriptor -- ^ a descriptor
-    -> AM.TriangleData -- ^ data of the triangles
+    -> AM.RectangleData -- ^ data of the rectangle
     -> IO ()
-render (Descriptor triangles firstIndex numVertices program) td = do
+render (Descriptor _ attributes indexBuffer program rectangleOffset rectangleNumIndices) td = do
     worldLocation <- get $ uniformLocation program "world"
     UL.uniformMatrix4fv worldLocation $= [worldMatrix td]
 
     clear [ ColorBuffer ]
 
-    bindVertexArrayObject $= Just triangles
-    drawArrays Triangles firstIndex numVertices
+    bindVertexArrayObject $= Just attributes
+    bindBuffer ElementArrayBuffer $= Just indexBuffer
+
+    drawElements Triangles rectangleNumIndices UnsignedShort (bufferOffset rectangleOffset)
+
+    bindBuffer ElementArrayBuffer $= Nothing
+    bindVertexArrayObject $= Nothing
 
     flush
 
-    checkError "display"
+    checkError "render"

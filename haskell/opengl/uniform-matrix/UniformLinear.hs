@@ -1,4 +1,4 @@
--- | Provides uniformMatrix functions which use Linear.
+-- | Provides uniformMatrix functions with Linear.
 module UniformLinear
     ( uniformMatrix2fv
     , uniformMatrix3fv
@@ -20,7 +20,7 @@ import Foreign.Marshal.Utils
 import Linear
 
 
--- | Returns the length of a List as a value of GLsizei.
+-- | Returns the length of a list as a value of GLsizei.
 len :: [a] -> GLsizei
 len = fromIntegral . length
 

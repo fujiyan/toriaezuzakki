@@ -1,4 +1,4 @@
--- | Provides uniformMatrix functions with 'Linear'.
+-- | Provides uniformMatrix functions with Linear.
 module UniformLinear
     ( uniformMatrix2fv
     , uniformMatrix3fv

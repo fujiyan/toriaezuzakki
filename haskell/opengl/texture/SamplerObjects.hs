@@ -8,7 +8,7 @@ module SamplerObjects (
 
 import Data.Maybe (fromMaybe)
 import Foreign.Marshal.Array
-import Graphics.Rendering.OpenGL.GL
+import Graphics.Rendering.OpenGL
 import Graphics.Rendering.OpenGL.Raw
 
 
